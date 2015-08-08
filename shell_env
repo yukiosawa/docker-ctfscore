@@ -1,0 +1,49 @@
+# common setting for shell scripts 
+
+
+#########
+# MySQL #
+#########
+# admin user
+MYSQL_ADMIN_USER=admin
+MYSQL_ADMIN_PASSWD=mypasswd
+
+# backup
+# dump without lock (lock only for taking snapshot)
+MYSQL_DUMP_OPT='--single-transaction --all-databases'
+# lock all tables during dump
+#MYSQL_DUMP_OPT='--lock-all-tables --all-databases'
+MYSQL_BKUP_DIR='backup/mysql'
+MYSQL_BKUP_FILE=$(date +%F-%H%M%S).sql.gz
+
+
+##########
+# Docker #
+##########
+# images
+IMAGE=yuki/ctfscore:v1.0
+
+# containers
+CONTAINER=ctfscore
+get_container_ip() {
+  CONTAINER_IP=$(docker inspect --format '{{.NetworkSettings.IPAddress}}' $CONTAINER)
+  if [ -z $CONTAINER_IP ]; then
+    echo "Failed to get IP address of the container $CONTAINER"
+    return 1
+  fi
+  return 0
+}
+# nsenter
+docker_nsenter() {
+    declare container_id=$1
+    declare command=$2
+    if [ -z "$container_id" ]; then
+        echo "Usage: docker_nsenter <container_id>" >&2
+        return 1
+    fi
+    nsenter --mount --uts --ipc --net --pid --target $(docker inspect --format '{{.State.Pid}}' $container_id) -- $command
+}
+
+# host directory that a container should mount as a data valume
+MNT_DIR=$(pwd)/mnt
+
