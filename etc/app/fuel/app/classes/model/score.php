@@ -179,6 +179,9 @@ class Model_Score extends Model
 	    {
 		$puzzles[$i] += array('answered' => false);
 	    }
+	    // レビュー平均スコアを付加
+	    $puzzles[$i] += array('avg_score' =>
+		Model_Review::average_score($puzzles[$i]['flag_id']));
 	}
 
 	return $puzzles;

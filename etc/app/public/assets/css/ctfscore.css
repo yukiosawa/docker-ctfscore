@@ -1,0 +1,23 @@
+body {
+    /* color: rgba(245,177,153,1); */
+    margin: 20px;
+    /* background-image: url("/assets/img/03-06-3.jpg"); */
+    /* background-repeat: no-repeat; */
+    /* background-position: center center; */
+    /* background-color: rgba(0,0,0,0.1); */
+    /* background-size: contain; */
+    background-size: 100%, auto;
+}
+.navbar {
+    /* background-image: url("/assets/img/03-22.jpg"); */
+    /* background-size: 70%; */
+    background-color: rgba(0,0,0,0.2);
+/* opacity: 0.9; */
+}
+
+.table {
+    width: 100%;
+    table-layout: fixed;
+    word-wrap: break-word;
+}
+

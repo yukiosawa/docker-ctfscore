@@ -1,5 +1,5 @@
 <?php echo Asset::js('Chart.min.js'); ?>
-<?php echo Asset::js('ctfscore.js'); ?>
+<?php echo Asset::js('ctfscore-chart.js'); ?>
 
 <div id="errmsg"></div>
 

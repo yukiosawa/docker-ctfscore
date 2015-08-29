@@ -29,9 +29,4 @@ if (!empty($errmsg)) {
   </div>
 </form>
 
-<div class="row">
-  <div class="col-md-offset-2 col-md-4 text-right">
-    <a href="/">トップへ戻る</a>
-  </div>
-</div>
 

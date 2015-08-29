@@ -1,10 +1,14 @@
+<?php echo Asset::js('jquery.raty.js'); ?>
+<?php echo Asset::js('ctfscore-raty.js'); ?>
+
+
 <!-- 問題一覧 -->
 <div class="row">
     <div class="col-md-12">
-	<table class="table">
+	<table class="table table-hover">
 	    <thead>
 		<tr>
-		    <th>番号</th><th>カテゴリ</th><th>タイトル</th><th>ポイント</th>
+		    <th>番号</th><th>カテゴリ</th><th>タイトル</th><th>ポイント</th><th>レビュー</th>
 		</tr>
 	    </thead>
 	    <tbody>
@@ -29,6 +33,8 @@
 			echo "<td><a href='#puzzle".$flag_id."' data-toggle='modal'>".$puzzle['title']."</a></td>";
 			// ポイント
 			echo "<td>".$puzzle['point']."</td>";
+			// レビュー平均スコア
+			echo "<td><a href='/review/list/".$flag_id."'><div class='review' data-number='".\Config::get('ctfscore.review.max_data_number')."' data-score='".$puzzle['avg_score']."'></div></a></td>";
 			echo "</tr>\n";
 		    }
 		?>

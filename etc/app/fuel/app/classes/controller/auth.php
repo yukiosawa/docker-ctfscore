@@ -7,27 +7,29 @@ class Controller_Auth extends Controller_Template
     {
 	parent::before();
 	
-        // ログイン状態の情報
-	if (Auth::check())
-	{
-	    $this->template->logined = true;
-	    $this->template->my_name = Auth::get_screen_name();
-	}
-	else
-	{
-	    $this->template->logined = false;
-	    $this->template->my_name = '';
-	}
-        // CTF時間の設定状況
-        $status = Model_Score::get_ctf_time_status();
-        if ($status['no_use'])
-        {
-            $this->template->ctf_time = false;
-        }
-        else
-        {
-            $this->template->ctf_time = true;
-        }
+	/* // ログイン状態の情報
+	   if (Auth::check())
+	   {
+	   $this->template->logined = true;
+	   $this->template->my_name = Auth::get_screen_name();
+	   $this->template->is_admin = $this->is_admin();
+	   }
+	   else
+	   {
+	   $this->template->logined = false;
+	   $this->template->my_name = '';
+	   $this->template->is_admin = false;
+	   }
+           // CTF時間の設定状況
+           $status = Model_Score::get_ctf_time_status();
+           if ($status['no_use'])
+           {
+           $this->template->ctf_time = false;
+           }
+           else
+           {
+           $this->template->ctf_time = true;
+           } */
     }
 
 
@@ -36,6 +38,7 @@ class Controller_Auth extends Controller_Template
 	// ページが見つからない
 	$this->template->title = 'ページが見つかりません。';
 	$this->template->content = View::forge('auth/404');
+	$this->template->footer = View::forge('auth/footer');
     }
 
 
@@ -44,6 +47,7 @@ class Controller_Auth extends Controller_Template
 	// 不正な画面遷移
 	$this->template->title = '不正な操作です。';
 	$this->template->content = View::forge('auth/invalid');
+	$this->template->footer = View::forge('auth/footer');
     }
 
 
@@ -86,6 +90,32 @@ class Controller_Auth extends Controller_Template
 	}
     }
 
+
+    public static function is_admin()
+    {
+	// 管理者ユーザかどうか判定
+	$admin_group_id = Config::get('ctfscore.admin.admin_group_id');
+	return Auth::member($admin_group_id);
+    }
+
+
+    public static function is_admin_url($url = null)
+    {
+	// 管理ページのURLかどうか判定
+	if (!isset($url))
+	{
+	    $url = $_SERVER['REQUEST_URI'];
+	}
+	if (strpos($url, '/admin/') === false)
+	{
+	    return false;
+	}
+	else
+	{
+	    return true;
+	}
+    }
+
     
     public function action_login()
     {
@@ -118,6 +148,7 @@ class Controller_Auth extends Controller_Template
 	$this->template->title = 'ログイン';
 	$this->template->content = View::forge('auth/login');
 	$this->template->content->set_safe('errmsg', $error_msg);
+	$this->template->footer = View::forge('auth/footer');
     }
 
 
@@ -129,6 +160,7 @@ class Controller_Auth extends Controller_Template
 	Auth::logout();
 	$this->template->title = 'ログアウト';
 	$this->template->content = View::forge('auth/logout');
+	$this->template->footer = View::forge('auth/footer');
     }
 
 
@@ -138,6 +170,7 @@ class Controller_Auth extends Controller_Template
 	$this->template->title = 'ユーザー作成';
 	$this->template->content = View::forge('auth/create');
 	$this->template->content->set_safe('errmsg', '');
+	$this->template->footer = View::forge('auth/footer');
     }
 
 
@@ -165,6 +198,7 @@ class Controller_Auth extends Controller_Template
 		    Auth::login($username, $password);
 		    $this->template->title = 'ユーザー登録完了';
 		    $this->template->content = View::forge('auth/created');
+		    $this->template->footer = View::forge('auth/footer');
 		    return;
 		}
 		else
@@ -185,6 +219,7 @@ class Controller_Auth extends Controller_Template
 	$this->template->title = 'ユーザー作成';
 	$this->template->content = View::forge('auth/create');
 	$this->template->content->set_safe('errmsg', $error_msg);
+	$this->template->footer = View::forge('auth/footer');
     }
 
     public function action_update()
@@ -195,6 +230,7 @@ class Controller_Auth extends Controller_Template
 	$this->template->title = 'ユーザー更新';
 	$this->template->content = View::forge('auth/update');
 	$this->template->content->set_safe('errmsg', '');
+	$this->template->footer = View::forge('auth/footer');
     }
 
 
@@ -223,6 +259,7 @@ class Controller_Auth extends Controller_Template
 		    {
 			$this->template->title = 'ユーザー更新完了';
 			$this->template->content = View::forge('auth/updated');
+			$this->template->footer = View::forge('auth/footer');
 			return;
 		    }
 		    else
@@ -243,6 +280,7 @@ class Controller_Auth extends Controller_Template
 	$this->template->title = 'ユーザー更新';
 	$this->template->content = View::forge('auth/update');
 	$this->template->content->set_safe('errmsg', $error_msg);
+	$this->template->footer = View::forge('auth/footer');
     }
 
 
@@ -256,6 +294,7 @@ class Controller_Auth extends Controller_Template
 	$this->template->content = View::forge('auth/remove');
 	$this->template->content->set('errmsg', '');
 	$this->template->content->set('username', $username);
+	$this->template->footer = View::forge('auth/footer');
     }
 
     public function action_removed()
@@ -277,10 +316,12 @@ class Controller_Auth extends Controller_Template
 	    $this->template->title = 'ユーザー削除';
 	    $this->template->content = View::forge('auth/remove');
 	    $this->template->content->set('errmsg', $error_msg);
+	    $this->template->footer = View::forge('auth/footer');
 	    return;
 	}
 	$this->template->title = 'ユーザー削除完了';
 	$this->template->content = View::forge('auth/removed');
+	$this->template->footer = View::forge('auth/footer');
     }
 
 }

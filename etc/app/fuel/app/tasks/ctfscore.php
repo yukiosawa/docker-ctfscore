@@ -46,6 +46,7 @@ class Ctfscore
     public function init_all_tables()
     {
 	/* delete all tables */
+	$this->delete_reviews_table();
 	$this->delete_gained_table();
         $this->delete_history_table();
 	$this->delete_users_table();
@@ -57,6 +58,7 @@ class Ctfscore
 	$this->create_times_table();
 	$this->create_gained_table();
         $this->create_history_table();
+	$this->create_reviews_table();
     }
 
 
@@ -271,6 +273,57 @@ class Ctfscore
     public function delete_history_table()
     {
         $table = 'history';
+        \DBUtil::drop_table($table);
+        echo "Table deleted: ".$table."\n";
+    }
+
+
+    public function create_reviews_table()
+    {
+        $table = 'reviews';
+
+        // only do this if it doesn't exist yet
+        if (\DBUtil::table_exists($table))
+        {
+            return;
+        }
+
+        \DBUtil::create_table(
+            $table,
+            /* fields */
+            array(
+		'id' => array('type' => 'int', 'constraint' => 11, 'auto_increment' => true),
+		'puzzle_id' => array('type' => 'int'),
+		'score' => array('type' => 'int', 'constraint' => 4),
+		'comment' => array('type' => 'varchar', 'constraint' => 255),
+		'secret_comment' => array('type' => 'varchar', 'constraint' => 255),
+                'uid' => array('type' => 'int', 'constraint' => 11),
+		'updated_at' => array('type' => 'datetime'),
+            ),
+            /* primary_keys */
+            array('id'),
+            true, false, NULL,
+            /* foreign_keys */
+            array(
+                array(
+                    'key' => 'uid',
+                    'reference' => array(
+                        'table' => 'users',
+                        'column' => 'id',
+                    ),
+                    'on_update' => 'CASCADE',
+                    'on_delete' => 'CASCADE',
+                ),
+            )
+        );
+
+        echo "Table created: ".$table."\n";
+    }
+
+    
+    public function delete_reviews_table()
+    {
+        $table = 'reviews';
         \DBUtil::drop_table($table);
         echo "Table deleted: ".$table."\n";
     }

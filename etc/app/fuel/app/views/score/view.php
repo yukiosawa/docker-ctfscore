@@ -48,16 +48,16 @@
 
 <p>
 <div id="ranking">
-  <div class="row">
-    <div class="col-md-6 ">
-    <span class="h4">総合ランキング</span>
-    <span><button class="btn btn-primary" onclick="location.reload()">更新する</button></span>
-    </div>
-  </div>
+  <!-- <div class="row">
+       <div class="col-md-6 ">
+       <span class="h4">総合ランキング</span>
+       <span><button class="btn btn-primary" onclick="location.reload()">更新する</button></span>
+       </div>
+       </div> -->
 
   <div class="row">
     <div class="col-md-12">
-    <table class="table table-striped table-bordered table-condensed">
+    <table class="table-hover table table-striped table-bordered table-condensed">
       <thead>
 	<tr class="success">
 	  <th>ランク</th><th>ユーザ</th><th>ポイント</th><th>更新時刻</th>

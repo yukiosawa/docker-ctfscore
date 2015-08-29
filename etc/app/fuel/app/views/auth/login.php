@@ -28,7 +28,7 @@ if (!empty($errmsg)) {
 
 <div class="row">
   <div class="col-md-offset-2 col-md-4 text-right">
-    <a href="/auth/create">新規ユーザー作成</a>
+    <a href="/auth/create" >新規ユーザー作成</a>
   </div>
 </div>
 

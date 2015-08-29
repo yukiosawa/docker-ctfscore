@@ -82,7 +82,7 @@ return array(
 	    'lime',
 	),
 	// グラフをプロットする間隔(秒)
-	'plot_interval_seconds' => 900,
+	'plot_interval_seconds' => 3600,
 	// グラフをプロットする最大数
 	'plot_max_steps' => 10000,
     ),
@@ -91,6 +91,18 @@ return array(
 	'attempt_interval_seconds' => 60,
 	// 試行回数の制限値(回)
 	'attempt_limit_times' => 5,
+    ),
+    'review' => array(
+	// 最大評価点
+	'max_data_number' => 10,
+    ),
+    'admin' => array(
+	// 管理者ユーザのグループID
+	'admin_group_id' => 100,
+    ),
+    'rule' => array(
+	// 競技ルール
+	'rule_file' => APPPATH.'ctfadmin/rule/rule.txt',
     ),
 );
 

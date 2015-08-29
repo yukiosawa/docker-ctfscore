@@ -7,27 +7,29 @@ class Controller_Score extends Controller_Template
     {
 	parent::before();
 
-	// ログイン状態の情報
-	if (Auth::check())
-	{
-	    $this->template->logined = true;
-	    $this->template->my_name = Auth::get_screen_name();
-	}
-	else
-	{
-	    $this->template->logined = false;
-	    $this->template->my_name = '';
-	}
-	// CTF時間の設定状況
-	$status = Model_Score::get_ctf_time_status();
-	if ($status['no_use'])
-	{
-	    $this->template->ctf_time = false;
-	}
-	else
-	{
-	    $this->template->ctf_time = true;
-	}
+	/* // ログイン状態の情報
+	   if (Auth::check())
+	   {
+	   $this->template->logined = true;
+	   $this->template->my_name = Auth::get_screen_name();
+	   $this->template->is_admin = Controller_Auth::is_admin();
+	   }
+	   else
+	   {
+	   $this->template->logined = false;
+	   $this->template->my_name = '';
+	   $this->template->is_admin = false;
+	   }
+	   // CTF時間の設定状況
+	   $status = Model_Score::get_ctf_time_status();
+	   if ($status['no_use'])
+	   {
+	   $this->template->ctf_time = false;
+	   }
+	   else
+	   {
+	   $this->template->ctf_time = true;
+	   } */
     }
 
 
@@ -78,6 +80,7 @@ class Controller_Score extends Controller_Template
 	$data['end_time'] = $status['end_time'];
 	$this->template->title = "実施状況";
 	$this->template->content = View::forge('score/status', $data);
+	$this->template->footer = View::forge('score/footer');
     }
     
 
@@ -91,7 +94,6 @@ class Controller_Score extends Controller_Template
 	$data['my_name'] = Auth::get_screen_name();
 
 	// 自分が回答済みの答え一覧
-	Config::load('ctfscore', true);
 	$show_my_answered = Config::get('ctfscore.scoreboard.show_my_answered');
 	if ($show_my_answered)
 	{
@@ -109,6 +111,7 @@ class Controller_Score extends Controller_Template
 
 	$this->template->title = "スコアボード";
 	$this->template->content = View::forge('score/view', $data);
+	$this->template->footer = '';
     }
 
 
@@ -241,6 +244,7 @@ class Controller_Score extends Controller_Template
 	$this->template->title = '回答結果';
 	$this->template->content = View::forge('score/submit', $data);
 	$this->template->content->set_safe('errmsg', $error_msg);
+	$this->template->footer = View::forge('score/footer');
     }
 
 
@@ -256,6 +260,7 @@ class Controller_Score extends Controller_Template
 
 	$this->template->title = '問題一覧';
 	$this->template->content = View::forge('score/puzzle', $data);
+	$this->template->footer = '';
     }
 
 
@@ -267,10 +272,22 @@ class Controller_Score extends Controller_Template
 	{
 	    // CTF時間設定なしの場合はグラフ描画しない
 	    $this->template->content = 'N/A';
+	    $this->template->footer = '';
 	}
 	else
 	{
 	    $this->template->content = View::forge('score/chart');
+	    $this->template->footer = '';
 	}
+    }
+
+
+    public function action_rule()
+    {
+	$data['rule'] = File::read(
+	    Config::get('ctfscore.rule.rule_file'), true);
+	$this->template->title = 'ルール';
+	$this->template->content = View::forge('score/rule', $data);
+	$this->template->footer = '';
     }
 }

@@ -4,6 +4,10 @@ if (!empty($errmsg)) {
 }
 ?>
 
+<p class='h4'>
+  新規ユーザ登録します。
+</p>
+
 <form class="form-horizontal" action="/auth/created" method="POST">
   <!-- CSRF対策 -->
   <input type="hidden" name="<?php echo \Config::get('security.csrf_token_key');?>" value="<?php echo \Security::fetch_token();?>" />
@@ -30,9 +34,4 @@ if (!empty($errmsg)) {
 </form>
 
 
-<div class="row">
-  <div class="col-md-offset-2 col-md-4 text-right">
-    <a href="/auth/login">ログイン画面へ戻る</a>
-  </div>
-</div>
 
