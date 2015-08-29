@@ -121,6 +121,10 @@ class Controller_Score extends Controller_Template
 	$this->checkCTFStatus(true, true);
 	// 認証済みユーザのみ許可
 	Controller_Auth::redirectIfNotAuth();
+	// 管理者は許可しない
+	if (Controller_Auth::is_admin()) {
+	    Response::redirect('auth/invalid');
+	}
 	// POST以外は受け付けない
 	Controller_Auth::checkAllowedMethod('POST');
 	// 入力パラメータチェック

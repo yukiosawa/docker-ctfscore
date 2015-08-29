@@ -114,9 +114,11 @@ class Model_Score extends Model
     // スコアボード全体を返す
     public static function get_scoreboard()
     {
-	// 全員のスコア一覧
+	// 全員のスコア一覧 (管理者ユーザは表示しない)
+	$admin_group_id = Config::get('ctfscore.admin.admin_group_id');
 	$scores = DB::select('id', 'username', 'totalpoint', 'pointupdated_at')
-	                ->from('users')->order_by('totalpoint', 'desc')
+	                ->from('users')->where('group', '!=', $admin_group_id)
+			->order_by('totalpoint', 'desc')
 	                ->order_by('pointupdated_at', 'asc')
 	                ->execute()->as_array();
 	// すべてのflag
