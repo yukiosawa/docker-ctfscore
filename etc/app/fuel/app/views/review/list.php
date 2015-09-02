@@ -49,14 +49,16 @@
 	<?php if($my_name == $item['username'] || $is_admin_url): ?>
 	  <?php
 	  $edit_path = '/review/edit/' . $item['id'];
-	  $del_path = '/review/delete/' . $item['id'];
+	  $del_path = '/review/delete';
 	  if ($is_admin_url){
 	      $edit_path = '/admin' . $edit_path;
 	      $del_path = '/admin' . $del_path;
 	  }
 	  ?>
 	  <a href="<?php echo $edit_path; ?>" class="btn btn-primary">編集</a>
-	  <a href="<?php echo $del_path; ?>" class="btn btn-primary" onclick="return confirm('削除しますか？')">削除</a>
+	  <?php echo render('review/_delete', array('action' => $del_path, 'review_id' => $item['id'])); ?>
+
+	  <!-- <a href="<?php echo $del_path; ?>" class="btn btn-primary" onclick="return confirm('削除しますか？')">削除</a> -->
 	<?php endif; ?>
       </td>
     </tr>

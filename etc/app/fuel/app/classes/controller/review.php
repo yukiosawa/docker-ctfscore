@@ -159,18 +159,31 @@ class Controller_Review extends Controller_Template
     }
 
 
-    public function action_delete($id = null)
+    public function action_delete()
     {
-	// 入力された文字列が数字のみで構成されるかチェック。
-	if (!ctype_digit($id)) $id = null;
+        // POST以外は受け付けない
+        Controller_Auth::checkAllowedMethod('POST');
+        // 入力パラメータチェック
+        Controller_Auth::checkCSRF();
+        $val = Model_Review::validate('delete');
+
 	$error_msg = '';
-	if (!$review = $this->get_editable_review($id))
+	$review = '';
+	if ($val->run())
 	{
-	    $error_msg = '削除できません。';
+	    $id = $val->validated('review_id');
+	    if (!$review = $this->get_editable_review($id))
+	    {
+		$error_msg = '削除できません。';
+	    }
+	    else
+	    {
+		Model_Review::delete_review($id);
+	    }
 	}
 	else
 	{
-	    Model_Review::delete_review($id);
+	    $error_msg = $val->show_errors();
 	}
 
 	$data['review'] = $review;

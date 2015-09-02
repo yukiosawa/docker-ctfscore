@@ -20,7 +20,7 @@
   <div class="col-md-offset-1 col-md-6">
   <?php if ($show_my_answered): ?>
     <div id="myscore">
-      <table class="table table-striped table-bordered table-condensed">
+      <table class="table table-condensed table-hover">
 	<thead>
 	  <tr class="success">
 	    <th>番号</th><th>回答済みの答え</th><th>ポイント</th>
@@ -57,7 +57,7 @@
 
   <div class="row">
     <div class="col-md-12">
-    <table class="table-hover table table-striped table-bordered table-condensed">
+    <table class="table table-condensed table-hover">
       <thead>
 	<tr class="success">
 	  <th>ランク</th><th>ユーザ</th><th>ポイント</th><th>更新時刻</th>

@@ -173,6 +173,13 @@ class Model_Review extends Model
 	    $val->add('secret_comment', '管理者へのメッセージ')
 		->add_rule('max_length', 255);
 	}
+	else if ($factory == 'delete')
+	{
+	    $val->add('review_id', 'レビューID')
+		->add_rule('required')
+		->add_rule('numeric_max', 255)
+		->add_rule('numeric_min', 1);
+	}
 
 	return $val;
     }

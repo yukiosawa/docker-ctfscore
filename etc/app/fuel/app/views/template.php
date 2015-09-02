@@ -42,8 +42,7 @@
   <body>
     <div class="container">
 
-      <!-- <nav class="navbar navbar-inverse"> -->
-      <nav class="navbar">
+      <nav class="navbar navbar-inverse">
 	<ul class="nav navbar-nav">
 	  <li><a href="/score/view">スコア</a></li>
 	  <li><a href="/score/puzzle">問題</a></li>
