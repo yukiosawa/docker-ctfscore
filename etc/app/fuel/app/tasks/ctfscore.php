@@ -132,6 +132,7 @@ class Ctfscore
             'flag_id' => array('type' => 'int'),
 	    'flag' => array('type' => 'varchar', 'constraint' => 255),
 	    'point' => array('type' => 'int'),
+	    'bonus_point' => array('type' => 'int'),
         ), array('id'));
 
 	echo "Table created: ".$table."\n";
@@ -370,25 +371,26 @@ class Ctfscore
 	    $flag_id = $flag_row['flag_id'];
 	    $flag = $flag_row['flag'];
 	    $point = $flag_row['point'];
-	    $this->insert_flag($flag_id, $flag, $point);
+	    $bonus_point = $flag_row['bonus_point'];
+	    $this->insert_flag($flag_id, $flag, $point, $bonus_point);
 	}
     }
 
 
     /* Insert the flag specified by arguments. */
-    public function insert_flag($flag_id = NULL, $flag = NULL, $point = NULL)
+    public function insert_flag($flag_id = NULL, $flag = NULL, $point = NULL, $bonus_point = NULL)
     {
-        if (($flag_id == NULL) || ($flag == NULL) || ($point == NULL)){
+        if (($flag_id == NULL) || ($flag == NULL) || ($point == NULL) || ($bonus_point == NULL)){
             echo "Usage: php oil r ctfscore:insert_flag flag_id flag point\n";
             return;
         }
 	$table = 'flags';
 	\DB::insert($table)->columns(array(
-	    'flag_id', 'flag', 'point'
+	    'flag_id', 'flag', 'point', 'bonus_point'
 	))->values(array(
-	    $flag_id, $flag, $point
+	    $flag_id, $flag, $point, $bonus_point
 	))->execute();
-        echo "Flag inserted: ".$flag_id.":".$flag.":".$point."\n";
+        echo "Flag inserted: ".$flag_id.":".$flag.":".$point.":".$bonus_point."\n";
     }
     
     

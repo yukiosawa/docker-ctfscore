@@ -89,7 +89,15 @@ class Model_Score extends Model
 			->execute()->as_array()[0]['totalpoint'];
 	// 更新後の総ポイント
 	$flag = Model_Score::get_flags($flag_id);
-        $newpoint = $totalpoint + $flag[0]['point'];
+	if (Model_Score::is_first_winner($flag_id))
+	{
+	    // 最初の正解者はボーナスポイント加点
+            $newpoint = $totalpoint + $flag[0]['point'] + $flag[0]['bonus_point'];
+	}
+	else
+	{
+            $newpoint = $totalpoint + $flag[0]['point'];
+	}
         try {
           DB::start_transaction();
           DB::insert('gained')->set(array(
@@ -110,6 +118,22 @@ class Model_Score extends Model
         }
     }
 
+
+    // その問題の最初の正解者かどうか
+    public static function is_first_winner($flag_id = null)
+    {
+        $result = DB::select()->from('gained')
+			      ->where('flag_id', $flag_id)
+			      ->execute()->as_array();
+	if (count($result) > 0)
+	{
+	    return false;
+	}
+	else
+	{
+	    return true;
+	}
+    }
 
     // スコアボード全体を返す
     public static function get_scoreboard()
