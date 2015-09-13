@@ -11,7 +11,7 @@
     <select class="form-control" id="puzzle_id" name="puzzle_id">
       <?php foreach ($puzzles as $puzzle): ?>
 	<!-- わかりやすくするためtitleを付加(送信時に除去) -->
-	<option <?php if($puzzle['flag_id'] == $puzzle_id) echo " selected" ?>><?php echo $puzzle['flag_id'].': '.$puzzle['title'] ?></option>
+	<option <?php if($puzzle['puzzle_id'] == $puzzle_id) echo " selected" ?>><?php echo $puzzle['puzzle_id'].': '.$puzzle['title'] ?></option>
       <?php endforeach; ?>
     </select>
   </div>

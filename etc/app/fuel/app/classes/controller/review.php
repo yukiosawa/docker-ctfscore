@@ -7,58 +7,10 @@ class Controller_Review extends Controller_Template
     {
         parent::before();
 
+        // CTF開始前は許可しない
+        Controller_Score::checkCTFStatus(true, false);
         // 認証済みユーザのみ許可
         Controller_Auth::redirectIfNotAuth();
-
-	/* // ログイン状態の情報
-           if (Auth::check())
-           {
-           $this->template->logined = true;
-           $this->template->my_name = Auth::get_screen_name();
-	   $this->template->is_admin = Controller_Auth::is_admin();
-           }
-           else
-           {
-           $this->template->logined = false;
-           $this->template->my_name = '';
-	   $this->template->is_admin = false;
-           }
-           // CTF時間の設定状況
-           $status = Model_Score::get_ctf_time_status();
-           if ($status['no_use'])
-           {
-           $this->template->ctf_time = false;
-           }
-           else
-           {
-           $this->template->ctf_time = true;
-           } */
-    }
-
-
-    public function get_editable_review($review_id)
-    {
-	list($driver, $userid) = Auth::get_user_id();
-	$review = null;
-	if ($reviews = Model_Review::get_reviews($review_id, null, null, true))
-	{
-	    $review = $reviews[0];
-	}
-
-	// 自分が投稿したレビュー
-	if ($review && $userid == $review['uid'])
-	{
-	    return $review;
-	}
-	// 管理者の場合全てのレビュー
-	elseif ($review && Controller_Auth::is_admin())
-	{
-	    return $review;
-	}
-	else
-	{
-	    return null;
-	}
     }
 
 
@@ -76,40 +28,21 @@ class Controller_Review extends Controller_Template
     }
 
 
-    public function action_view($id = null)
-    {
-	// 入力された文字列が数字のみで構成されるかチェック。
-	if (!ctype_digit($id)) $id = null;
-	$data = '';
-	$error_msg = '';
-	if (!is_null($id) && count($reviews = Model_Review::get_reviews($id)) > 0)
-	{
-	    $data['review'] = $reviews[0];
-	}
-	else
-	{
-	    $error_msg = 'レビューIDの指定が無効です。';
-	}
-	$data['errmsg'] = $error_msg;
-	$this->template->title = 'View';
-	$this->template->content = View::forge('review/view', $data);
-	$this->template->footer = View::forge('review/footer');
-    }
-
-
     public function action_edit($id = null)
     {
 	// 入力された文字列が数字のみで構成されるかチェック。
 	if (!ctype_digit($id)) $id = null;
 	$error_msg = '';
 	$data = '';
+	$puzzle_id = '';
 	
-	if (!$review = $this->get_editable_review($id))
+	if (!$review = Model_Review::get_editable_review($id))
 	{
 	    $error_msg = '編集できません。';
 	}
 	else
 	{
+	    $puzzle_id = $review['puzzle_id'];
 	    if (Input::method() == 'POST')
 	    {
 		// 入力パラメータチェック
@@ -118,12 +51,13 @@ class Controller_Review extends Controller_Template
 
 		if ($val->run())
 		{
-		    $puzzle_id = $val->validated('puzzle_id');
+		    // POSTのpuzzle_idは無視(review_idに紐づくpuzzle_id採用)
+		    // $puzzle_id = $val->validated('puzzle_id');
 		    $score = $val->validated('score');
 		    $comment = $val->validated('comment');
 		    $secret_comment = $val->validated('secret_comment');
-//		    list($driver, $userid) = Auth::get_user_id();
-		    // 作成時のユーザIDをそのまま引き継ぐ
+		    // 作成時のユーザIDを引き継ぐ(更新ユーザは保持しない)
+		    // list($driver, $userid) = Auth::get_user_id();
 		    $userid = $review['uid'];
 		    $result = Model_Review::update_review($id, $puzzle_id, $score, $comment, $secret_comment, $userid);
 		    if($result)
@@ -150,7 +84,7 @@ class Controller_Review extends Controller_Template
 	    }
 	}
 
-	$data['puzzles'] = Model_Score::get_puzzles();
+	$data['puzzles'] = Model_Puzzle::get_puzzles($puzzle_id);
 	$data['review'] = $review;
 	$this->template->title = 'レビュー投稿';
 	$this->template->content = View::forge('review/edit', $data);
@@ -159,26 +93,32 @@ class Controller_Review extends Controller_Template
     }
 
 
-    public function action_delete()
+    public function post_delete()
     {
-        // POST以外は受け付けない
-        Controller_Auth::checkAllowedMethod('POST');
         // 入力パラメータチェック
         Controller_Auth::checkCSRF();
         $val = Model_Review::validate('delete');
 
 	$error_msg = '';
-	$review = '';
+	$msg = '';
+	$review = array();
 	if ($val->run())
 	{
 	    $id = $val->validated('review_id');
-	    if (!$review = $this->get_editable_review($id))
+            if (!$review = Model_Review::get_editable_review($id))
 	    {
 		$error_msg = '削除できません。';
 	    }
 	    else
 	    {
-		Model_Review::delete_review($id);
+		if (Model_Review::delete_review($id) < 1)
+		{
+		    $error_msg = '削除に失敗しました。';
+		}
+		else
+		{
+		    $msg = '削除しました。';
+		}
 	    }
 	}
 	else
@@ -188,7 +128,7 @@ class Controller_Review extends Controller_Template
 
 	$data['review'] = $review;
 	$data['errmsg'] = $error_msg;
-	$data['msg'] = '削除しました。';
+	$data['msg'] = $msg;
 	$this->template->title = 'Delete';
 	$this->template->content = View::forge('review/delete', $data);
 	$this->template->footer = View::forge('review/footer');
@@ -200,20 +140,32 @@ class Controller_Review extends Controller_Template
 	// 入力された文字列が数字のみで構成されるかチェック。
 	if (!ctype_digit($puzzle_id)) $puzzle_id = null;
 	$error_msg = '';
+	$review['puzzle_id'] = '';
+	$review['score'] = '';
+	$review['comment'] = '';
+	$review['secret_comment'] = '';
+	$puzzles = '';
+
+	list($driver, $userid) = Auth::get_user_id();
 	if (Input::method() == 'POST')
 	{
-            // 入力パラメータチェック
+            // CSRFチェック
             Controller_Auth::checkCSRF();
-	    $val = Model_Review::validate('create');
 
+	    $puzzle_id = Input::post('puzzle_id');
+	    $score = Input::post('score');
+	    $comment = Input::post('comment');
+	    $secret_comment = Input::post('secret_comment');
+
+            // 入力パラメータチェック
+	    $val = Model_Review::validate('create');
 	    if ($val->run())
 	    {
 		$id = '';
-		$puzzle_id = $val->validated('puzzle_id');
-		$score = $val->validated('score');
-		$comment = $val->validated('comment');
-		$secret_comment = $val->validated('secret_comment');
-		list($driver, $userid) = Auth::get_user_id();
+//		$puzzle_id = $val->validated('puzzle_id');
+//		$score = $val->validated('score');
+//		$comment = $val->validated('comment');
+//		$secret_comment = $val->validated('secret_comment');
 		$id = Model_Review::create_review($puzzle_id, $score, $comment, $secret_comment, $userid);
 		if ($id)
 		{
@@ -236,19 +188,30 @@ class Controller_Review extends Controller_Template
 	    {
 		$error_msg = $val->show_errors();
 	    }
+
+	    // エラー画面表示用に保持
+	    $puzzles = Model_Puzzle::get_puzzles($puzzle_id);
+	    $review['puzzle_id'] = $puzzle_id;
+	    $review['score'] = $score;
+	    $review['comment'] = $comment;
+	    $review['secret_comment'] = $secret_comment;
+	}
+	else
+	{
+	    // GET
+	    $puzzles = Model_Review::get_reviewable_puzzles($userid);
+	    if (!$puzzles)
+	    {
+		$error_msg = 'レビュー投稿できる問題がありません。';
+	    }
+	    $review['puzzle_id'] = $puzzle_id;
 	}
 
-	$review['puzzle_id'] = $puzzle_id;
-	$review['score'] = '';
-	$review['comment'] = '';
-	$review['secret_comment'] = '';
-
-	$data['puzzles'] = Model_Score::get_puzzles();
 	$data['review'] = $review;
+	$data['puzzles'] = $puzzles;
 	$this->template->title = 'レビュー投稿';
 	$this->template->content = View::forge('review/create', $data);
 	$this->template->content->set_safe('errmsg', $error_msg);
 	$this->template->footer = View::forge('review/footer');
     }
-    
 }

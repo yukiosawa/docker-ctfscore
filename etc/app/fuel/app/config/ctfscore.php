@@ -1,45 +1,23 @@
 <?php
 
 return array(
-    'scoreboard' => array(
-	// trueの場合、回答済みのflagをスコアボードに表示する
-	'show_my_answered' => false,
-        // trueの場合、全員の回答内訳をスコアボードに表示する
-        'show_all_answered_detail' => false,
-    ),
     'puzzles' => array(
-	// 問題ファイルを格納する場所
+        // 問題ファイルを格納する場所
 	'path_to_puzzles' => APPPATH.'ctfadmin/puzzles/',
-	// カテゴリを記入するファイル名
-	'category_file' => 'category.txt',
-	// タイトルを記入するファイル名
-	'title_file' => 'title.txt',
-	// 本文を記入するファイル名
-	'content_file' => 'content.txt',
-	// 添付ファイルを格納するサブディレクトリ名
-	'attachment_dir' => 'attachments',
+        // 添付ファイルを格納するサブディレクトリ名
+        'attachment_dir' => 'attachments',
 	// 問題解答時に表示する画像
-	'images' => array(
-	    // trueの場合、正解時に画像表示する
-	    'is_active_on_success' => true,
-	    // 正解時に表示する画像ファイルを格納するサブディレクトリ名
-	    'success_image_dir' => 'images_on_success',
-	    // trueの場合、不正解時に画像表示する
-	    'is_active_on_fail' => true,
-	    // 不正解時に表示する画像ファイルを格納するディレクトリ
-	    'fail_image_dir' => APPPATH.'ctfadmin/puzzles/images_on_fail',
-	),
-	// 問題解答時に表示するテキスト
-	'texts' => array(
-	    // trueの場合、正解時にテキスト表示する
-	    'is_active_on_success' => true,
-	    // 正解時に表示するテキストファイルを格納するサブディレクトリ名
-	    'success_text_dir' => 'texts_on_success',
-	    // trueの場合、不正解時にテキスト表示する
-	    'is_active_on_fail' => true,
-	    // 不正解時に表示するテキストファイルを格納するディレクトリ
-	    'fail_text_dir' => APPPATH.'ctfadmin/puzzles/texts_on_fail',
-	),
+        'images' => array(
+            // trueの場合、正解時に画像表示する
+            'is_active_on_success' => true,
+            // 正解時に表示する画像ファイルを格納するサブディレクトリ名
+            'success_image_dir' => 'images_on_success',
+            'success_random_image_dir' => 'images_random_on_success',
+            // trueの場合、不正解時に画像表示する
+            'is_active_on_failure' => true,
+            // 不正解時に表示する画像ファイルを格納するディレクトリ
+            'failure_random_image_dir' => 'images_random_on_failure',
+        ),
     ),
     'sound' => array(
 	// trueの場合、問題正解時に音を鳴らす
@@ -95,14 +73,16 @@ return array(
     'review' => array(
 	// 最大評価点
 	'max_data_number' => 10,
+	// 未回答の問題へのレビュー投稿を許可
+	'allow_unanswered_puzzle' => false,
     ),
     'admin' => array(
 	// 管理者ユーザのグループID
 	'admin_group_id' => 100,
     ),
     'rule' => array(
-	// 競技ルール
-	'rule_file' => APPPATH.'ctfadmin/rule/rule.txt',
+	// 競技ルールを記載するファイル
+	'rule_file' => APPPATH.'ctfadmin/rule/rule.html',
     ),
 );
 

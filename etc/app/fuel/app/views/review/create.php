@@ -3,8 +3,11 @@
 <?php endif; ?>
 
 <?php
-$action = $_SERVER['REQUEST_URI'];
-echo render('review/_form', array('action' => $action, 'review' => $review, 'puzzles' => $puzzles));
+if (!empty($puzzles)) {
+  $action = $_SERVER['REQUEST_URI'];
+  echo render('review/_form', array('action' => $action, 'review' => $review, 'puzzles' => $puzzles));
+}
 ?>
+
 
 

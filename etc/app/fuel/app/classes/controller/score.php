@@ -6,37 +6,13 @@ class Controller_Score extends Controller_Template
     public function before()
     {
 	parent::before();
-
-	/* // ログイン状態の情報
-	   if (Auth::check())
-	   {
-	   $this->template->logined = true;
-	   $this->template->my_name = Auth::get_screen_name();
-	   $this->template->is_admin = Controller_Auth::is_admin();
-	   }
-	   else
-	   {
-	   $this->template->logined = false;
-	   $this->template->my_name = '';
-	   $this->template->is_admin = false;
-	   }
-	   // CTF時間の設定状況
-	   $status = Model_Score::get_ctf_time_status();
-	   if ($status['no_use'])
-	   {
-	   $this->template->ctf_time = false;
-	   }
-	   else
-	   {
-	   $this->template->ctf_time = true;
-	   } */
     }
 
 
     // CTF実施状況に応じてステータスページへリダイレクトする
     // 第1引数true: 開始前の場合リダイレクト
     // 第2引数true: 終了後の場合リダイレクト
-    public function checkCTFStatus($before = true, $ended = true)
+    public static function checkCTFStatus($before = true, $ended = true)
     {
 	$status = Model_Score::get_ctf_time_status();
 	// 開始前のリダイレクト ($before=true指定)
@@ -93,21 +69,11 @@ class Controller_Score extends Controller_Template
 	// 自分のユーザ名
 	$data['my_name'] = Auth::get_screen_name();
 
-	// 自分が回答済みの答え一覧
-	$show_my_answered = Config::get('ctfscore.scoreboard.show_my_answered');
-	if ($show_my_answered)
-	{
-	    list($driver, $userid) = Auth::get_user_id();
-	    $data['my_answered'] = Model_Score::get_answered_flags($userid);
-	}
-	$data['show_my_answered'] = $show_my_answered;
-
-	// flag一覧
-	$data['all_flags'] = Model_Score::get_flags();
+	// puzzle一覧
+	$data['all_puzzles'] = Model_Puzzle::get_puzzles();
 
 	// 全ユーザの回答状況一覧
 	$data['scoreboard'] = Model_Score::get_scoreboard();
-	$data['show_all_answered_detail'] = Config::get('ctfscore.scoreboard.show_all_answered_detail');
 
 	$this->template->title = "スコアボード";
 	$this->template->content = View::forge('score/view', $data);
@@ -134,12 +100,12 @@ class Controller_Score extends Controller_Template
 	$data = array();
 	$answer = '';
 	$result = '';
-	$flag_id = '';
+	$puzzle_id = '';
 	$point = '';
 	$error_msg = '';
-	$images = array();
-	$texts = array();
-	$text_dir = '';
+	$image_dir = '';
+	$image_name = '';
+	$text = '';
 
 	// ユーザID
 	list($driver, $userid) = Auth::get_user_id();
@@ -155,77 +121,54 @@ class Controller_Score extends Controller_Template
 	{
 	    // POSTされた回答が正解かチェック
 	    $answer = $val->validated('answer');
-	    $flags = Model_Score::get_flags(NULL, $answer, NULL);
-	    if (count($flags) != 1)
+	    $puzzle_id = Model_Puzzle::get_puzzle_id($answer);
+	    if (!isset($puzzle_id))
 	    {
 		// 不正解
-		$result = 'fail';
+		$result = 'failure';
 
 		// 管理画面へ通知
-		$msg = 'failed.';
-		Model_Score::emitToMgmtConsole('fail', $msg);
+		$mgmt_msg = 'failed.';
+		Model_Score::emitToMgmtConsole('fail', $mgmt_msg);
 		// ローカル用サウンド
 		Model_Score::sound('fail');
 
-		// 表示するメッセージ
-		$files = Score_Puzzle::get_fail_files();
-		if (Score_Puzzle::is_message_active('image', 'fail') && isset($files['images']))
-		{
-		    // ファイル名のみ
-		    //$images = $files['images'];
-		    // 失敗時は画像をランダムに選ぶ
-		    if (count($files['images']) > 0)
-		    {
-			$cnt = rand() % count($files['images']);
-			$images[0] = $files['images'][$cnt];
-		    }
-		}
-		if (Score_Puzzle::is_message_active('text', 'fail') && isset($files['texts']))
-		{
-		    // ファイルのフルパスを保持してviewへ渡す
-		    $texts = $files['texts'];
-		    $text_dir = $files['text_dir'];
-		}
+		// 表示するメッセージ(画像、テキスト)
+		$msg = Model_Puzzle::get_failure_messages();
+                // 取得できない場合はデフォルト値をセット
+                $text = (!empty($msg['text'])) ? $msg['text'] : '不正解';
+                $image_name = $msg['image_name'];
 	    }
 	    else
 	    {
 		// 回答済かどうかチェック
-		$flag = $flags[0];
-		if (Model_Score::is_answered_flag(
-		    $userid, $flag['flag_id']))
+		if (Model_Puzzle::is_answered_puzzle($userid, $puzzle_id))
 		{
 		    // 既に正解済み
 		    $result = 'duplicate';
+		    $text = '既に回答済み';
 		}
 		else
 		{
 		    // 正解
 		    $result = 'success';
-		    $flag_id = $flag['flag_id'];
-		    $point = $flag['point'];
+		    $puzzle = Model_Puzzle::get_puzzles($puzzle_id)[0];
+		    $point = $puzzle['point'];
 
 		    // 獲得ポイントを更新
-		    Model_Score::set_flag_gained($userid, $flag['flag_id']);
+		    Model_Puzzle::set_puzzle_gained($userid, $puzzle_id);
 
 		    // 管理画面へ通知
-		    $msg = $username.' solved the puzzle '.$flag['flag_id'].'.';
-		    Model_Score::emitToMgmtConsole('success', $msg);
+		    $mgmt_msg = $username.' solved the puzzle '.$puzzle_id.'.';
+		    Model_Score::emitToMgmtConsole('success', $mgmt_msg);
 		    // ローカル用サウンド
 		    Model_Score::sound('success');
 
-		    // 表示するメッセージ
-		    $files = Score_Puzzle::get_success_files($flag['flag_id']);
-		    if (Score_Puzzle::is_message_active('image', 'success') && isset($files['images']))
-		    {
-			// ファイル名のみ
-			$images = $files['images'];
-		    }
-		    if (Score_Puzzle::is_message_active('text', 'success') && isset($files['texts']))
-		    {
-			// ファイルのフルパスを保持してviewへ渡す
-			$texts = $files['texts'];
-			$text_dir = $files['text_dir'];
-		    }
+		    // 表示するメッセージ(画像、テキスト)
+		    $msg = Model_Puzzle::get_success_messages($puzzle_id);
+		    // 取得できない場合はデフォルト値をセット
+                    $text = (!empty($msg['text'])) ? $msg['text'] : '正解';
+                    $image_name = $msg['image_name'];
 		}
 	    }
 	}
@@ -240,11 +183,10 @@ class Controller_Score extends Controller_Template
 
 	$data['answer'] = $answer;
 	$data['result'] = $result;
-	$data['flag_id'] = $flag_id;
+	$data['puzzle_id'] = $puzzle_id;
 	$data['point'] = $point;
-	$data['images'] = $images;
-	$data['texts'] = $texts;
-	$data['text_dir'] = $text_dir;
+	$data['image_name'] = $image_name;
+	$data['text'] = $text;
 	$this->template->title = '回答結果';
 	$this->template->content = View::forge('score/submit', $data);
 	$this->template->content->set_safe('errmsg', $error_msg);
@@ -260,8 +202,7 @@ class Controller_Score extends Controller_Template
 	Controller_Auth::redirectIfNotAuth();
 
 	// 問題一覧
-	$data['puzzles'] = Model_Score::get_puzzles();
-
+	$data['puzzles'] = Model_Puzzle::get_puzzles_addinfo();
 	$this->template->title = '問題一覧';
 	$this->template->content = View::forge('score/puzzle', $data);
 	$this->template->footer = '';
@@ -288,10 +229,23 @@ class Controller_Score extends Controller_Template
 
     public function action_rule()
     {
-	$data['rule'] = File::read(
-	    Config::get('ctfscore.rule.rule_file'), true);
+	$data['rule_file'] = Config::get('ctfscore.rule.rule_file');
 	$this->template->title = 'ルール';
 	$this->template->content = View::forge('score/rule', $data);
+	$this->template->footer = '';
+    }
+
+    
+    public function action_profile($username)
+    {
+	// CTF開始前は許可しない
+	$this->checkCTFStatus(true, false);
+	// 認証済みユーザのみ許可
+	Controller_Auth::redirectIfNotAuth();
+
+	$data['profile'] = Model_Score::get_profile($username);
+	$this->template->title = 'ユーザプロファイル';
+	$this->template->content = View::forge('score/profile', $data);
 	$this->template->footer = '';
     }
 }

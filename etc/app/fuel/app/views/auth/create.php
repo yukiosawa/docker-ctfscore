@@ -7,6 +7,9 @@ if (!empty($errmsg)) {
 <p class='h4'>
   新規ユーザ登録します。
 </p>
+<p>
+  パスワードを忘れるとログインできませんので注意してください。(リセットはできません)
+</p>
 
 <form class="form-horizontal" action="/auth/created" method="POST">
   <!-- CSRF対策 -->

@@ -2,6 +2,64 @@
 
 class Model_Review extends Model
 {
+    // レビュー投稿可能な問題すべてを取得
+    public static function get_reviewable_puzzles($uid)
+    {
+        // 回答済のチェック
+        if (!Config::get('ctfscore.review.allow_unanswered_puzzle'))
+        {
+            return Model_Puzzle::get_answered_puzzles($uid);
+        }
+	else
+	{
+	    return Model_Puzzle::get_puzzles();
+	}
+    }
+
+
+    // 編集権限のあるレビューを取得
+    public static function get_editable_review($review_id)
+    {
+	$review = null;
+	$reviews = Model_Review::get_reviews($review_id, null, null, true);
+	if ($reviews)
+	{
+	    $review = $reviews[0];
+	}
+	else
+	{
+	    // レビューIDが無効
+	    return null;
+	}
+
+	// 管理者ログインの場合は無条件に権限付与
+	if (Controller_Auth::is_admin())
+	{
+	    return $review;
+	}
+
+	// 回答済のチェック
+	list($driver, $userid) = Auth::get_user_id();
+        if (!Config::get('ctfscore.review.allow_unanswered_puzzle'))
+        {
+	    $puzzle_id = $review['puzzle_id'];
+	    if (!Model_Puzzle::is_answered_puzzle($userid, $puzzle_id))
+	    {
+		return null;
+	    }
+	}
+
+	// 自分が投稿したレビュー
+	if ($userid == $review['uid'])
+	{
+	    return $review;
+	}
+	else
+	{
+	    return null;
+	}
+    }
+
 
     public static function get_reviews($review_id = null, $puzzle_id = null, $uid = null, $admin = false)
     {
@@ -55,14 +113,14 @@ class Model_Review extends Model
 	// 問題タイトルを付加
 	foreach ($result as &$review)
 	{
-	    $puzzle = Score_Puzzle::get_puzzle($review['puzzle_id']);
+	    $puzzle = Model_Puzzle::get_puzzles($review['puzzle_id']);
 	    if($puzzle)
 	    {
-		$review['puzzle_title'] = $puzzle['title'];
+		$review['puzzle_title'] = $puzzle[0]['title'];
 	    }
 	    else
 	    {
-		$review['puzzle_title'] = 'test';
+		$review['puzzle_title'] = '';
 	    }
 	}
 	unset($review);
@@ -74,7 +132,13 @@ class Model_Review extends Model
     public static function create_review($puzzle_id, $score, $comment, $secret_comment, $uid)
     {
 	// 問題IDの存在チェック
-	if (!Score_Puzzle::get_puzzle($puzzle_id)) return null;
+	if (!Model_Puzzle::get_puzzles($puzzle_id)) return null;
+
+        // 回答済のチェック
+	if (!Config::get('ctfscore.review.allow_unanswered_puzzle'))
+	{
+            if (!Model_Puzzle::is_answered_puzzle($uid, $puzzle_id)) return null;
+	}
 
 	$id = '';
 	$now = Model_Score::get_current_time();
@@ -111,8 +175,11 @@ class Model_Review extends Model
     public static function update_review($id, $puzzle_id, $score, $comment, $secret_comment, $uid)
     {
 	// 問題IDの存在チェック
-	if (!Score_Puzzle::get_puzzle($puzzle_id)) return null;
+	if (!Model_Puzzle::get_puzzles($puzzle_id)) return null;
 
+	// 編集権のチェック
+	if (!Model_Review::get_editable_review($id)) return null;
+	
 	$result = '';
 	$now = Model_Score::get_current_time();
 	
@@ -140,7 +207,10 @@ class Model_Review extends Model
 
     public static function delete_review($id)
     {
-	DB::delete('reviews')->where('id', $id)->execute();
+	// 編集権のチェック
+	if (!Model_Review::get_editable_review($id)) return null;
+
+	return DB::delete('reviews')->where('id', $id)->execute();
     }
 
 

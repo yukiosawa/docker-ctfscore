@@ -1,10 +1,7 @@
-// ctfscore.js
-
-
 // グラフを表示する
 function print_chart()
 {
-    $.get('/chart/list', function(data)
+    $.get('/chart/ranking', function(data)
 	  {
 	      if (data)
 	      {

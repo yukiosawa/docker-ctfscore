@@ -4,40 +4,25 @@
     }
 ?>
 
-<p>
-  <?php
-      echo $answer;
-  ?>
-</p>
-
-<?php
-    if ($result == 'success') {
-	echo "<p class='alert alert-success h4'>正解！</p>";
-	/* echo "<p>" . $point . "ポイント獲得。</p>"; */
-    } elseif ($result == 'fail') {
-	echo "<p class='alert alert-danger h4'>残念、不正解です。</p>";
-    } elseif ($result == 'duplicate') {
-	echo "<p class='alert alert-info h4'>既に回答済です。</p>";
-    }
-?>
+<!-- メッセージ -->
+<?php if ($result == 'success'): ?>
+  <p class='alert alert-success h4'><?php echo nl2br($text); ?></p>
+<?php elseif ($result == 'failure'): ?>
+  <p class='alert alert-danger h4'><?php echo nl2br($text); ?></p>
+<?php elseif ($result == 'duplicate'): ?>
+  <p class='alert alert-info h4'><?php echo nl2br($text); ?></p>
+<?php endif; ?>
 
 <div class="row">
   <div class="col-md-5">
     <?php
-        // 問題ごとのカスタムテキスト
-	foreach ($texts as $text)
-	{
-	    $path = $text_dir.'/'.$text;
-	    $content = File::read($path, true);
-	    echo "<p>".nl2br($content)."</p>\n";
-	}
-        // 問題ごとのカスタム画像
-	foreach ($images as $image)
-	{
-	    echo "<p><image src='/download/image?id=".$flag_id.
-		 "&type=".$result."&file=".$image.
+    // 問題ごとのカスタム画像
+    if (!empty($image_name))
+    {
+	echo "<p><image src='/download/image?id=".$puzzle_id.
+		 "&type=".$result."&file=".$image_name.
 		 "' class='img-responsive' /></p>\n";
-	}
+    }
     ?>
   </div>
 </div>

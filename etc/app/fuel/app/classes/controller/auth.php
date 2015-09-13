@@ -6,30 +6,6 @@ class Controller_Auth extends Controller_Template
     public function before()
     {
 	parent::before();
-	
-	/* // ログイン状態の情報
-	   if (Auth::check())
-	   {
-	   $this->template->logined = true;
-	   $this->template->my_name = Auth::get_screen_name();
-	   $this->template->is_admin = $this->is_admin();
-	   }
-	   else
-	   {
-	   $this->template->logined = false;
-	   $this->template->my_name = '';
-	   $this->template->is_admin = false;
-	   }
-           // CTF時間の設定状況
-           $status = Model_Score::get_ctf_time_status();
-           if ($status['no_use'])
-           {
-           $this->template->ctf_time = false;
-           }
-           else
-           {
-           $this->template->ctf_time = true;
-           } */
     }
 
 

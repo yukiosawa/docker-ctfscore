@@ -71,6 +71,7 @@
 		<?php echo $my_name ?>としてログイン中
 	      </a>
 	      <ul class="dropdown-menu">
+		<li><a href="/score/profile/<?php echo $my_name ?>">プロフィール</a></li>
 		<li><a href="/auth/update">パスワード変更</a></li>
 		<li><a href="/auth/remove">ユーザ情報削除</a></li>
 		<li><a href="/auth/logout">ログアウト</a></li>

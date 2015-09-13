@@ -1,1 +1,4 @@
-<?php echo "<p>".nl2br($rule)."</p>"; ?>
+<?php
+File::read($rule_file, false);
+?>
+

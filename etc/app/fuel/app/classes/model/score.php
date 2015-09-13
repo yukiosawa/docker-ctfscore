@@ -3,127 +3,11 @@
 class Model_Score extends Model
 {
 
-    public static function get_answered_flags($uid = NULL)
-    {
-	// 指定されたユーザの回答済み一覧を返す
-	if (is_null($uid))
-	{
-	    return array();
-	}
-        // ひとつのflag_idに対して複数flagに対応
-	$answered = DB::select('gained.flag_id', 'flags.flag', 'flags.point')
-                         ->from('gained')->where('uid', '=', $uid)
-			 ->group_by('flag_id')
-                         ->join('flags', 'LEFT')
-			 ->on('gained.flag_id', '=', 'flags.flag_id')
-	                 ->order_by('flag_id', 'asc')
-			 ->execute()->as_array();
-	return $answered;
-    }
-
-
-    public static function get_all_answered_flags()
-    {
-	// 全ユーザの回答済み一覧を返す
-	$users = DB::select('id', 'username')->from('users')->execute()->as_array();
-	$result = array();
-	foreach ($users as $user)
-	{
-	    $result += array($user['username'] => Model_Score::get_answered_flags($user['id']));
-	}
-	return $result;
-    }
-
-    
-    public static function get_flags($flag_id = NULL, $flag = NULL, $point = NULL)
-    {
-	// 指定された条件でflagテーブルの内容を返す
-        // ひとつのflag_idに対して複数flagに対応
-	//$query = DB::select('id', 'flag_id', 'flag', 'point')->from('flags')->group_by('flag_id');
-	//$query = DB::select()->from('flags');
-	$query = DB::select()->from('flags')->group_by('flag_id');
-	if (!is_null($flag_id))
-	{
-	    $query->where('flag_id', $flag_id);
-	}
-	if (!is_null($flag))
-	{
-	    $query->where('flag', $flag);
-	}
-	if (!is_null($point))
-	{
-	    $query->where('point', $point);
-	}
-	$query->order_by('flag_id', 'asc');
-	$result = $query->execute()->as_array();
-	return $result;
-    }
-
-
-    public static function is_answered_flag($uid = NULL, $flag_id = NULL)
-    {
-	// 指定されたflagが回答済みかどうかを返す
-	$query = DB::select()->from('gained');
-	$query->where('uid', $uid);
-	$query->where('flag_id', $flag_id);
-	$result = $query->execute();
-
-	if (count($result) != 1)
-	{
-	    return false;
-	}
-	else
-	{
-	    return true;
-	}
-    }
-
-
-    public static function set_flag_gained($uid = NULL, $flag_id = NULL)
-    {
-        // 獲得ポイントを更新する
-	$now = Model_Score::get_current_time();
-	// 現在獲得済み総ポイント
-        $totalpoint = DB::select('totalpoint')
-			->from('users')->where('id', $uid)
-			->execute()->as_array()[0]['totalpoint'];
-	// 更新後の総ポイント
-	$flag = Model_Score::get_flags($flag_id);
-	if (Model_Score::is_first_winner($flag_id))
-	{
-	    // 最初の正解者はボーナスポイント加点
-            $newpoint = $totalpoint + $flag[0]['point'] + $flag[0]['bonus_point'];
-	}
-	else
-	{
-            $newpoint = $totalpoint + $flag[0]['point'];
-	}
-        try {
-          DB::start_transaction();
-          DB::insert('gained')->set(array(
-		'uid' => $uid,
-		'flag_id' => $flag_id,
-		'gained_at' => $now,
-		'totalpoint' => $newpoint
-            ))->execute();
-          DB::update('users')->set(array(
-		'totalpoint' => $newpoint,
-		'pointupdated_at' =>$now
-            ))->where('id', $uid)->execute();
-          DB::commit_transaction();
-        } catch (Exception $e) {
-          /* ロールバック */
-          DB::rollback_transaction();
-          throw $e;
-        }
-    }
-
-
     // その問題の最初の正解者かどうか
-    public static function is_first_winner($flag_id = null)
+    public static function is_first_winner($puzzle_id = null)
     {
         $result = DB::select()->from('gained')
-			      ->where('flag_id', $flag_id)
+			      ->where('puzzle_id', $puzzle_id)
 			      ->execute()->as_array();
 	if (count($result) > 0)
 	{
@@ -145,75 +29,10 @@ class Model_Score extends Model
 			->order_by('totalpoint', 'desc')
 	                ->order_by('pointupdated_at', 'asc')
 	                ->execute()->as_array();
-	// すべてのflag
-	$flags = Model_Score::get_flags();
-	// 各ユーザのレコードにflagの回答状況を追加
-	for ($i = 0; $i < count($scores); $i++)
-	{
-	    $uid = $scores[$i]['id'];
-	    $answered_flags = Model_Score::get_answered_flags($uid);
-	    $answered_flag_ids = array();
-	    foreach ($answered_flags as $row)
-	    {
-		$answered_flag_ids[] = $row['flag_id'];
-	    }
-	    $status = array();
-	    foreach ($flags as $flag)
-	    {
-		if (in_array($flag['flag_id'], $answered_flag_ids))
-		{
-		    $status += array($flag['flag_id'] => 'done');
-		}
-		else
-		{
-		    $status += array($flag['flag_id'] => '');
-		}
-	    }
-	    $scores[$i] += array('flags' => $status);
-	}
 	return $scores;
     }
 
-
-    // 問題一覧を返す
-    public static function get_puzzles()
-    {
-	// flag一覧を取得
-	$flags = Model_Score::get_flags();
-
-	// 問題一覧を取得
-	$puzzles = array();
-	foreach ($flags as $flag)
-	{
-	    $puzzle = Score_Puzzle::get_puzzle($flag['flag_id']);
-	    if ($puzzle)
-	    {
-		$puzzles[] = $puzzle;
-	    }
-	}
-	
-	// 回答済かどうかを付加する
-	list($driver, $userid) = Auth::get_user_id();
-	for ($i = 0; $i < count($puzzles); $i++)
-	{
-	    if (Model_Score::is_answered_flag(
-		$userid, $puzzles[$i]['flag_id']))
-	    {
-		$puzzles[$i] += array('answered' => true);
-	    }
-	    else
-	    {
-		$puzzles[$i] += array('answered' => false);
-	    }
-	    // レビュー平均スコアを付加
-	    $puzzles[$i] += array('avg_score' =>
-		Model_Review::average_score($puzzles[$i]['flag_id']));
-	}
-
-	return $puzzles;
-    }
-
-
+    
     // 管理画面へイベントを通知
     public static function emitToMgmtConsole($event = NULL, $msg = NULL)
     {
@@ -290,10 +109,8 @@ class Model_Score extends Model
 
 
     // グラフ描画用データを返す
-    public static function get_chart_data()
+    public static function get_ranking_chart()
     {
-	Config::load('ctfscore', true);
-
 	// 横軸の項目
 	// 開始と終了時刻
 	$times = DB::select()->from('times')->execute()->as_array();
@@ -337,12 +154,17 @@ class Model_Score extends Model
 	$result['labels'] = $labels;
 	
 	// 上位のユーザだけ対象とする。また0点は対象外とする。
+	// 管理者も対象外
 	$max_number = Config::get('ctfscore.chart.max_number_of_users');
-        $users = DB::select('id', 'username')->from('users')
-	  ->where('totalpoint', '>', 0)
-	  ->order_by('totalpoint', 'desc')->limit($max_number)
-	  ->order_by('pointupdated_at', 'asc')
-	  ->execute()->as_array('id');
+        $admin_group_id = Config::get('ctfscore.admin.admin_group_id');
+        $users = DB::select('id', 'username')
+                     ->from('users')
+		     ->where('totalpoint', '>', 0)
+		     ->where('group', '!=', $admin_group_id)
+		     ->order_by('totalpoint', 'desc')
+		     ->limit($max_number)
+		     ->order_by('pointupdated_at', 'asc')
+		     ->execute()->as_array('id');
 	if (count($users) < 1)
 	{
 	    return;
@@ -377,6 +199,91 @@ class Model_Score extends Model
     }
 
 
+    public static function get_profile_chart($username = NULL)
+    {
+	$userid = '';
+	if (!$username)
+	{
+	    // 指定されない場合はログイン中のユーザIDとする
+	    list($driver, $userid) = Auth::get_user_id();
+	    $username = Auth::get_screen_name();
+	}
+	else
+	{
+	    $userid = Model_Score::get_uid($username);
+	}
+	if (!$userid) return;
+
+	$puzzles = Model_Puzzle::get_puzzles_addinfo($userid);
+
+	// カテゴリごとに獲得スコア／総スコアを算出
+	$categories = array();
+	foreach ($puzzles as $puzzle)
+	{
+	    $category = $puzzle['category'];
+	    $point = $puzzle['point'];
+	    if (!array_key_exists($category, $categories))
+	    {
+		$categories[$category]['totalpoint'] = 0;
+		$categories[$category]['point'] = 0;
+	    }
+	    $categories[$category]['totalpoint'] += $point;
+	    if ($puzzle['answered'])
+	    {
+		$categories[$category]['point'] += $point;
+	    }
+	}
+	$result['username'] = $username;
+	$result['categories'] = $categories;
+
+	return $result;
+    }
+
+    
+    // 個人プロファイルを返す
+    public static function get_profile($username = NULL)
+    {
+	$userid = '';
+	if (!$username)
+	{
+	    // 指定されない場合はログイン中のユーザIDとする
+	    list($driver, $userid) = Auth::get_user_id();
+	    $username = Auth::get_screen_name();
+	}
+	else
+	{
+	    $userid = Model_Score::get_uid($username);
+	}
+	if (!$userid) return;
+
+
+	$answered = Model_Puzzle::get_answered_puzzles($userid);
+	$result['username'] = $username;
+	$result['answered_puzzles'] = $answered;
+	$result['reviews'] = Model_Review::get_reviews(null, null, $userid);
+	return $result;
+    }
+
+
+    // usernameをuseridに変換する
+    public static function get_uid($username = NULL)
+    {
+	if (!$username) return;
+	
+	$result = DB::select('id')->from('users')
+				  ->where('username', $username)
+				  ->execute()->as_array();
+	if (count($result) > 0)
+	{
+	    return $result[0]['id'];
+	}
+	else
+	{
+	    return;
+	}
+    }
+    
+    
     // 現在のCTF実施状況を返す(開始前、実施中、終了)
     public static function get_ctf_time_status()
     {
@@ -433,11 +340,21 @@ class Model_Score extends Model
 	{
 	    $val->add('username', 'ユーザー名')
 		->add_rule('required')
-		->add_rule('min_length', 4)
-		->add_rule('max_length', 15);
+		->add_rule('max_length', 15)
+		->add_rule('valid_string',
+			   array(
+			       'alpha',
+			       'numeric',
+			       'punctuation',
+			       'dashes',
+			       'quotes',
+			       'brackets',
+			       'braces',
+			       'utf8'
+			   ));
 	    $val->add('password', 'パスワード')
 		->add_rule('required')
-		->add_rule('min_length', 6)
+		->add_rule('min_length', 4)
 		->add_rule('max_length', 20);
 	}
 	else if ($factory == 'update')
@@ -465,7 +382,6 @@ class Model_Score extends Model
     // 回答試行数制限を超過しているかどうかを返す
     public static function is_over_attempt_limit($uid = NULL)
     {
-	Config::load('ctfscore', true);
 	$interval_seconds = Config::get('ctfscore.history.attempt_interval_seconds');
 	$limit_times = Config::get('ctfscore.history.attempt_limit_times');
 	$now = Model_Score::get_current_time();
@@ -474,6 +390,8 @@ class Model_Score extends Model
 	$query = DB::select()->from('history');
 	$query->where('uid', '=', $uid);
 	$query->where('posted_at', '>', $subed_time);
+	// 正解時のポストは除外しておく
+	$query->where('result', '!=', 'success');
 	$result = $query->execute();
 
 	if (count($result) >= $limit_times)

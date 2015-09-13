@@ -47,7 +47,7 @@ return array(
 	/**
 	 * This will allow you to use the group & acl driver for non-logged in users
 	 */
-	'guest_login' => true,
+	'guest_login' => false,
 
 	/**
 	 * This will allow the same user to be logged in multiple times.
