@@ -66,6 +66,7 @@ RUN apt-get update && apt-get install -y supervisor
 RUN git clone https://github.com/yukiosawa/ctfscore.git && \
     cp -r ctfscore/etc/fuelphp/* $APP_DIR/. && \
     cp -r ctfscore/* $APP_DIR/.
+RUN chown -R www-data:www-data $APP_DIR
 
 COPY container-entrypoint.sh $APP_DIR/etc/scripts/.
  RUN chmod 755 $APP_DIR/etc/scripts/*.sh

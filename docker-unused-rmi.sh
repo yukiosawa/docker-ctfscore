@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # load common setting
 cd $(dirname $0)
@@ -7,7 +7,7 @@ cd $(dirname $0)
 # delete unused images.
 echo Removing unused images ...
 ImageIDs=$(docker images -f "dangling=true" -q)
-if [ -z $ImageIDs]; then
+if [ -z $ImageIDs ]; then
     echo No unused images found.
     exit
 fi

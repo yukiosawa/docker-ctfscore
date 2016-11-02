@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # load common setting
 cd $(dirname $0)

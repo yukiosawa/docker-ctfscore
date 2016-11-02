@@ -1,0 +1,11 @@
+*~
+
+.mysql_password
+
+# files copied from the container
+common.sh
+mysql_backup.sh
+mysql_client.sh
+mysql_ping.sh
+mysql_restore.sh
+
