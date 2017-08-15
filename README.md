@@ -41,15 +41,33 @@ $ cd docker-ctfscore
 
 - Dockerコンテナの起動
 ```
-$ sudo docker-run.sh
+$ sudo ./docker-run.sh
 ```
+    - supervisordによって各サービスが起動したら以下のログ出力されるので、Ctrl-Cを押してログ表示を終了する。
+    ```
+    INFO success: redis entered RUNNING state, ...
+    INFO success: nodejs entered RUNNING state, ...
+    INFO success: mysqld entered RUNNING state, ...
+    INFO success: apache2 entered RUNNING state, ...
+    ```
 
 - Dockerコンテナの停止
 ```
-$ sudo docker-rm.sh
+$ sudo ./docker-rm.sh
 ```
 
-- Dockerコンテナ内の対話shell
-```
-$ sudo docker-shell.sh
-```
+- 保守用スクリプト
+    - Dockerコンテナ内の対話shell
+    ```
+    $ sudo ./docker-shell.sh
+    ```
+    - Dockerコンテナ内のデータをホストOSへバックアップ
+    ```
+    $ sudo ./mysql_backup.sh
+    $ sudo ./docker-files-backup.sh
+    ```
+    - ホストOSのバックアップからDockerコンテナ内へリストア
+    ```
+    $ sudo ./mysql_restore.sh
+    $ sudo ./docker-files-restore.sh
+    ```

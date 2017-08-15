@@ -1,8 +1,8 @@
 # Docker version 17.05.0-ce
-# CTF scoreboard application for raspbian OS
+# CTF scoreboard application
 
 # Choose one of these based on your host OS (x86/x64 or Raspberry pi)
-FROM debian:jessie
+#FROM debian:jessie
 #FROM resin/rpi-raspbian:jessie
 
 MAINTAINER yuki
