@@ -1,7 +1,9 @@
-# Docker version 1.11.2
-# CTF scoreboard application
+# Docker version 17.05.0-ce
+# CTF scoreboard application for raspbian OS
 
+# Choose one of these based on your host OS (x86/x64 or Raspberry pi)
 FROM debian:jessie
+#FROM resin/rpi-raspbian:jessie
 
 MAINTAINER yuki
 
@@ -31,7 +33,7 @@ RUN apt-get update && apt-get install -y \
     php5-mysql
 
 # fuelphp
-RUN curl get.fuelphp.com/oil | sh && \
+RUN curl https://get.fuelphp.com:443/oil | sh && \
     oil create ctfscore && \
     cd ctfscore && \
     oil refine install && \
@@ -42,14 +44,16 @@ RUN curl get.fuelphp.com/oil | sh && \
 
 # node.js and socket.io
 RUN apt-get update && apt-get install -y nodejs npm && \
-    update-alternatives --install /usr/bin/node nodejs /usr/bin/nodejs 100 && \
-    npm install socket.io && \
-    cp node_modules/socket.io/node_modules/socket.io-client/socket.io.js $APP_DIR/public/assets/js/.
+    npm install n -g && \
+    n stable && \
+    apt-get purge -y nodejs npm && \
+    /usr/local/bin/npm install socket.io && \
+    find node_modules -name socket.io.js | xargs -i cp -p {} $APP_DIR/public/assets/js/.
 
 # socket.io-php-emitter
 RUN apt-get update && apt-get install -y redis-server && \
-    npm install socket.io-redis && \
-    npm install socket.io-emitter && \
+    /usr/local/bin/npm install socket.io-redis && \
+    /usr/local/bin/npm install socket.io-emitter && \
     git clone https://github.com/ashiina/socket.io-php-emitter.git && \
     cd socket.io-php-emitter && \
     $APP_DIR/composer.phar install && \

@@ -4,7 +4,7 @@
 # Docker #
 ##########
 # images
-IMAGE=yuki/ctfscore:v1.0
+IMAGE=yuki/ctfscore:v1.1
 
 # containers
 CONTAINER=ctfscore
