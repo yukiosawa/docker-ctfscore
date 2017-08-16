@@ -71,3 +71,7 @@ $ sudo ./docker-rm.sh
     $ sudo ./mysql_restore.sh
     $ sudo ./docker-files-restore.sh
     ```
+
+
+## おまけ
+Raspiでスコアサーバ構築する場合は、[こちら](https://github.com/yukiosawa/docker-ctfscore-raspi-addon)を追加することで問題正解時にLED点滅させることができます。
