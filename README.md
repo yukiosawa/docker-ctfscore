@@ -8,7 +8,7 @@ docker-ctfscore
 - 事前準備
 ```
 $ cd ~
-$ sudo apt-get install -y git curl
+$ sudo apt-get install -y git curl mysql-client
 ```
 
 - Dockerインストール
@@ -50,6 +50,13 @@ $ sudo ./docker-run.sh
  INFO success: mysqld entered RUNNING state, ...
  INFO success: apache2 entered RUNNING state, ...
 ```
+ホストOS側に正しくパスワードファイルが作成されていることを確認する。空ファイルだった場合は、`$ sudo ./docker-run.sh`を何度か再実行してみる、または`docker-run.sh`の`sleep 10s`の秒数を長くしてリトライしてみる。
+```
+$ cat .mysql_password
+MYSQL_ROOT_PASSWD=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+MYSQL_ADMIN_USER=XXX
+MYSQL_ADMIN_PASSWD=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+```
 
 - Dockerコンテナの停止
 ```
@@ -71,6 +78,9 @@ $ sudo ./docker-rm.sh
     $ sudo ./mysql_restore.sh
     $ sudo ./docker-files-restore.sh
     ```
+
+- 注意事項
+Dockerコンテナを停止するとコンテナ内のデータは全て破棄される。スコアサーバに登録したデータを保存しておきたい場合は、`$ sudo ./mysql_backup.sh`および`$ sudo ./docker-files-backup.sh`でバックアップを取得すること(cron等で定期的に実行しておいてもよい)。新しいコンテナ起動後に、`$ sudo ./mysql_restore.sh`および`$ sudo ./docker-files-restore.sh`でリストアする。
 
 
 ## おまけ
