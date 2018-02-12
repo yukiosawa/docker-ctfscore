@@ -9,7 +9,10 @@ cd $(dirname $0)
 
 # run a new container
 echo "Running a new container: $CONTAINER (image: $IMAGE)"
-docker run -d --name $CONTAINER -p 80:80 -p 8080:8080 -p 3306:3306 $IMAGE
+#docker run -d --name $CONTAINER -p 80:80 -p 8080:8080 -p 3306:3306 $IMAGE
+# To avoid MySQL error when starting
+# [ERROR] Fatal error: Can't open and lock privilege tables: Got error 140 from storage engine
+docker run -v /var/lib/mysql -d --name $CONTAINER -p 80:80 -p 8080:8080 -p 3306:3306 $IMAGE
 
 # copy scripts from the container
 echo "Copying scripts from the container."
